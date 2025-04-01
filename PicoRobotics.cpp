@@ -4,8 +4,16 @@
 
 #include "PicoRobotics.h"
 
-#define PCA9685_SW_RESET  (byte)0x06    // Sent to address 0x00 to reset all devices on Wire line
+// Register addresses from data sheet
+#define PCA9685_MODE1_REG               (byte)0x00
+#define PCA9685_PRESCALE_REG            (byte)0xFE
+#define PCA9685_ALLLEDONL_REG           (byte)0xFA
+#define PCA9685_ALLLEDONH_REG           (byte)0xFB
+#define PCA9685_ALLLEDOFFL_REG           (byte)0xFC
+#define PCA9685_ALLLEDOFFH_REG           (byte)0xFD
 
+#define PCA9685_SW_RESET  (byte)0x06    // Sent to address 0x00 to reset all devices on Wire line
+#define PRESCALE_VAL      (byte)0x79    // prescaler value for common PWM output frequency
 
 PicoRobotics::PicoRobotics(byte I2CAddress, TwoWire& i2cWire, uint32_t i2cSpeed) 
     : _i2cAddress(I2CAddress),
@@ -30,18 +38,44 @@ void PicoRobotics::initPCA(){
   // Soft reset of the I2C chip
   resetDevices();
 
+  /* setup the prescale to have 20mS pulse repetition - this is dictated by the servos.
+     set PWM Frequency Pre Scale.  The prescale value is determined with the formunla:
+     presscale value = round(osc clock / (4096 * update rate))
+     Where update rate is the output modulation frequency required.
+     For example, the output frequency of 50Hz (20ms) for the servo, with the internal oscillator 
+     clock frequency of 25 Mhz is as follows:
+     prescale value = round( 25MHZ / (4096 * 50Hz) ) - 1 
+     prescale value = round (25000000 / (4096 * 50)) - 1 
+     presscale value = 121 = 79h = 0x79 
+     see 7.3.5 "PWM frequency PRE_SCALE" of PCA9685 datasheet
+     no need to first read Mode 1 register, it is first access to register, default value is known */
+  writeRegister(PCA9685_PRESCALE_REG, PRESCALE_VAL);
 
-Il faut s'assurer que les étapes d'un exemple comme examples/SimpleExample/SimpleExample.ino
-sont dans le code de initPCA() :
-    (ok)pwmController.resetDevices();       // Resets all PCA9685 devices on i2c line
-    pwmController.init();               // Initializes module using default totem-pole driver mode, and default disabled phase balancer
-    pwmController.setPWMFrequency(100); // Set PWM freq to 100Hz (default is 200Hz, supports 24Hz to 1526Hz)
-    pwmController.setChannelPWM(0, 128 << 4); // Set PWM to 128/255, shifted into 4096-land
+  // block write outputs to off
+  writeRegister(PCA9685_ALLLEDONL_REG, 0);
+  writeRegister(PCA9685_ALLLEDONH_REG, 0);
+  writeRegister(PCA9685_ALLLEDOFFL_REG, 0);
+  writeRegister(PCA9685_ALLLEDOFFH_REG, 0);
 
+  /* come out of sleep (and Mode1 register init)
+     Restart disabled, Use internal clock, Register auto-increment disabled, Normal mode (not sleep), 
+     PCA9685 does not respond to I2C-bus subadresses, does not respond to LED All Call I2C-bus address
+     see §7.3.1 of PCA9685 datasheet */
+  writeRegister(PCA9685_MODE1_REG, 0x00);
 
+  /* It takes 500uS max for the oscillator to be up and running once the SLEEP bit (bit 4) has
+     been set to logic 0.  Timings on outputs are not guranteed if the PWM control registers are
+     accessed within the 500uS window */
+  delayMicroseconds(500);
+
+  /* Mode 2 register does not need an init, default value is enough
+     INVRT = 0, OUTDRV = 1 (needed for external N-type driver connecting output of PCA9685 to DRV8833 H-Bridges)
+     OCH = 0, OUTNE = 0 (unused, OE* pin = 0)
+  */
 }
 
 void PicoRobotics::resetDevices() {
+  // see §7.6 of PCA9685 datasheet
   #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
       Serial.println("PicoRobotics::resetDevices");
   #endif
@@ -55,6 +89,26 @@ void PicoRobotics::resetDevices() {
     checkForErrors();
   #endif
 }
+
+void PicoRobotics::writeRegister(byte regAddress, byte value) {
+#ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+  Serial.print("  PicoRobotics::writeRegister regAddress: 0x");
+  Serial.print(regAddress, HEX);
+  Serial.print(", value: 0x");
+  Serial.println(value, HEX);
+#endif
+
+_lastI2CError = 0;
+_i2cWire->beginTransmission(_i2cAddress);
+_i2cWire->write(regAddress);
+_i2cWire->write(value);
+_lastI2CError = _i2cWire->endTransmission()
+
+#ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+    checkForErrors();
+#endif
+}
+
 
 static const char *textForI2CError(byte errorCode) {
     switch (errorCode) {
@@ -81,9 +135,15 @@ void PicoRobotics::checkForErrors() {
 }
 
 void PicoRobotics::motorOn(byte motor, byte direction, byte speed){
+  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+    Serial.println("PicoRobotics::motorOn");
+  #endif
 
 }
 
 void PicoRobotics::motorOff(byte motor){
+  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+    Serial.println("PicoRobotics::motorOff");
+  #endif
 
 }
