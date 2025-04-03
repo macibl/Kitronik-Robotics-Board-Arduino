@@ -1,7 +1,4 @@
-# see README.md
-# Note : Kitronik Robotics board is designed to use a Raspberry Pi Pico module, 
-#        but any microcontroller module with an I2C interface can be used.
-
+// see README.md
 
 #include "PicoRobotics.h"
 
@@ -10,6 +7,8 @@ PicoRobotics board;
 #define PCA9685_ENABLE_DEBUG_OUTPUT 1
 #define leftMotor 1
 #define rightMotor 2 
+#define FORWARD 0
+#define REVERSE 1
 
 void setup() {
   Serial.begin(115200);               // Begin Serial and Wire interfaces
@@ -17,9 +16,9 @@ void setup() {
 
   //Serial.println(board.getChannelPWM(0)); // Should output 2048, which is 128 << 4
 
-  board.motorOn(leftMotor, "f", 10)   OK en arduino ?
+  board.motorOn(leftMotor, FORWARD, 10);
   delay(1);
-  board.motorOff(leftMotor)
+  board.motorOff(leftMotor);
 }
 
 void loop() {

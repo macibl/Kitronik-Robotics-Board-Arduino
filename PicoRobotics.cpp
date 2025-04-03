@@ -12,8 +12,8 @@
 #define PCA9685_ALLLEDOFFL_REG           (byte)0xFC
 #define PCA9685_ALLLEDOFFH_REG           (byte)0xFD
 
-#define PCA9685_SW_RESET  (byte)0x06    // Sent to address 0x00 to reset all devices on Wire line
-#define PRESCALE_VAL      (byte)0x79    // prescaler value for common PWM output frequency
+#define PCA9685_SW_RESET    (byte)0x06    // Sent to address 0x00 to reset all devices on Wire line
+
 
 PicoRobotics::PicoRobotics(byte I2CAddress, TwoWire& i2cWire, uint32_t i2cSpeed) 
     : _i2cAddress(I2CAddress),
@@ -81,7 +81,7 @@ void PicoRobotics::resetDevices() {
   #endif
   _i2cWire->beginTransmission(0);
   _i2cWire->write(PCA9685_SW_RESET);
-  _lastI2CError = _i2cWire->endTransmission()
+  _lastI2CError = _i2cWire->endTransmission();
 
   delayMicroseconds(10);
 
@@ -102,16 +102,18 @@ _lastI2CError = 0;
 _i2cWire->beginTransmission(_i2cAddress);
 _i2cWire->write(regAddress);
 _i2cWire->write(value);
-_lastI2CError = _i2cWire->endTransmission()
+_lastI2CError = _i2cWire->endTransmission();
 
 #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
     checkForErrors();
 #endif
 }
 
-
+#ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+#if 0
+// Compilation error: invalid conversion from 'const char*' to 'byte {aka unsigned char}' [-fpermissive]
 static const char *textForI2CError(byte errorCode) {
-    switch (errorCode) {
+  switch (errorCode) {
     case 0:
         return "Success";
     case 1:
@@ -124,21 +126,30 @@ static const char *textForI2CError(byte errorCode) {
         return "Other error";
     }
 }
+#endif
 
 void PicoRobotics::checkForErrors() {
   if (_lastI2CError) {
     Serial.print("  PicoRobotics::checkErrors lastI2CError: ");
     Serial.print(_lastI2CError);
     Serial.print(": ");
-    Serial.println(textForI2CError(_lastI2CError));
+    //Serial.println(textForI2CError(_lastI2CError));
     }
 }
 
+#endif // /ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+
+/* Driving the motor is simpler than the servo - just convert 0-100% to 0-4095 and push it to the correct registers.
+   each motor has 4 writes - low and high bytes for a pair of registers */
 void PicoRobotics::motorOn(byte motor, byte direction, byte speed){
   #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
     Serial.println("PicoRobotics::motorOn");
   #endif
 
+  if (speed > 100) {
+    speed = 100;
+  }
+  assert(!((motor < 1) || (motor > 4)));
 }
 
 void PicoRobotics::motorOff(byte motor){

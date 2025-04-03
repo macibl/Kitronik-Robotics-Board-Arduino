@@ -30,9 +30,7 @@ clock frequency of 25 Mhz is as follows (see § 7.3.5 PWM frequency PRE-SCALE on
 prescale value = round( 25MHZ / (4096 * 50Hz) ) - 1 
 prescale value = round (25000000 / (4096 * 50)) - 1 
 presscale value = 121 = 79h = 0x79 */
-#define PRESCALE_VAL = 0x79 
-#define PI_ESTIMATE = 3.1416
-#define PCA9685_SW_RESET
+#define PRESCALE_VAL        (byte)0x79    // prescaler value for common PWM output frequency
 
 class PicoRobotics
 {
@@ -53,6 +51,9 @@ class PicoRobotics
     // Calling will perform a software reset of PCA9685 device on the Wire instance
     void resetDevices();
 
+    // using Wire library, write the byte value in I2C device at register adress regAddress
+    void writeRegister(byte regAddress, byte value);
+
     /* drive motor at speed between 0 and 100 % of power supply voltage (function will convert pourcentage 
        in a 12 bit value 0-4095) and initialise corresponding LEDx registers
        for each motor, two LEDx output are used to control H-bridge motor driver DRV8833
@@ -66,5 +67,14 @@ class PicoRobotics
       void checkForErrors();
     #endif
 
+  protected:
+    byte _i2cAddress;                                       // Module's i2c address (default: B000000)
+    #ifndef PCA9685_USE_SOFTWARE_I2C
+      TwoWire* _i2cWire;                                      // Wire class instance (unowned) (default: Wire)
+      uint32_t _i2cSpeed;                                     // Module's i2c clock speed (default: 400000)
+    #endif
+    
+    byte _lastI2CError;                                     // Last module i2c error
 
 };
+#endif  // ifndef PicoRobotics_H
