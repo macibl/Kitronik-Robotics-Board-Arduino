@@ -17,8 +17,11 @@
 #define CHIP_ADDRESS_ALTERNATE3 0x6F
 #define CHIP_ADDRESS CHIP_ADDRESS_DEFAULT
 
-#define MOT_REG_BASE = 0x28 // Address of first register used to control motors : LED8_OFF_L register 
-#define REG_OFFSET = 4      // register offset for same type of register
+#define leftMotor   1
+#define rightMotor  2 
+#define FORWARD     0
+#define REVERSE     1
+
 
 /* setup the prescale to have 20mS pulse repetition - this is dictated by the servos (even if currently not used)
 set PWM Frequency Pre Scale.  The prescale value is determined with the formunla:
@@ -56,7 +59,7 @@ class PicoRobotics
 
     /* drive motor at speed between 0 and 100 % of power supply voltage (function will convert pourcentage 
        in a 12 bit value 0-4095) and initialise corresponding LEDx registers
-       for each motor, two LEDx output are used to control H-bridge motor driver DRV8833
+       for motor 1 to motor 4, two LEDx output are used to control H-bridge motor driver DRV8833
        for each LEDx output, LEDx_ON register stay in default value 0, and LEDx_OFF register define the PWM value 
     */  
     void motorOn(byte motor, byte direction, byte speed);

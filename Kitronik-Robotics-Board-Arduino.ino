@@ -5,10 +5,6 @@
 PicoRobotics board;
 
 #define PCA9685_ENABLE_DEBUG_OUTPUT 1
-#define leftMotor 1
-#define rightMotor 2 
-#define FORWARD 0
-#define REVERSE 1
 
 void setup() {
   Serial.begin(115200);               // Begin Serial and Wire interfaces

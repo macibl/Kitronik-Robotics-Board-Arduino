@@ -12,6 +12,9 @@
 #define PCA9685_ALLLEDOFFL_REG           (byte)0xFC
 #define PCA9685_ALLLEDOFFH_REG           (byte)0xFD
 
+#define MOT_REG_BASE    (byte)0x28 // Address of first register used to control motors : LED8_OFF_L register 
+#define REG_OFFSET      (byte)0x04      // register offset for same type of register
+
 #define PCA9685_SW_RESET    (byte)0x06    // Sent to address 0x00 to reset all devices on Wire line
 
 
@@ -131,8 +134,8 @@ static const char *textForI2CError(byte errorCode) {
 void PicoRobotics::checkForErrors() {
   if (_lastI2CError) {
     Serial.print("  PicoRobotics::checkErrors lastI2CError: ");
-    Serial.print(_lastI2CError);
-    Serial.print(": ");
+    Serial.println(_lastI2CError);
+    //Serial.print(": ");
     //Serial.println(textForI2CError(_lastI2CError));
     }
 }
@@ -143,18 +146,57 @@ void PicoRobotics::checkForErrors() {
    each motor has 4 writes - low and high bytes for a pair of registers */
 void PicoRobotics::motorOn(byte motor, byte direction, byte speed){
   #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
-    Serial.println("PicoRobotics::motorOn");
+    Serial.print("PicoRobotics::motorOn");
+    Serial.print(", motor: ");
+    Serial.print(motor);
+    Serial.print(", direction: ");
+    Serial.print(direction);
+    Serial.print(", speed: ");
+    Serial.println(speed);
   #endif
 
-  if (speed > 100) {
-    speed = 100;
-  }
+  assert(speed < 100);
   assert(!((motor < 1) || (motor > 4)));
+
+  byte motorReg = MOT_REG_BASE + ((motor - 1) * (REG_OFFSET << 1));
+
+  uint16_t PWMVal = int(speed * 40.95);
+  byte lowByte = PWMVal & 0xFF;
+  byte highByte = (PWMVal>>8) & 0xFF;
+  
+  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+    Serial.print(", motorReg: 0x");
+    Serial.print(motorReg, HEX);
+    Serial.print(", lowByte: 0x");
+    Serial.print(lowByte, HEX);
+    Serial.print(", highByte: 0x");
+    Serial.println(highByte, HEX);
+  #endif
+
+  if (direction == FORWARD) {
+    writeRegister(motorReg, lowByte);
+    writeRegister(motorReg+1, highByte);
+    writeRegister(motorReg+4, 0);
+    writeRegister(motorReg+5, 0);
+  } else if (direction == REVERSE) {
+    writeRegister(motorReg+4, lowByte);
+    writeRegister(motorReg+5, highByte);
+    writeRegister(motorReg, 0);
+    writeRegister(motorReg+1, 0);
+  } else {
+    writeRegister(motorReg, 0);
+    writeRegister(motorReg+1, 0);
+    writeRegister(motorReg+4, 0);
+    writeRegister(motorReg+5, 0);
+    assert("INVALID DIRECTION");
+  }
 }
 
 void PicoRobotics::motorOff(byte motor){
   #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
     Serial.println("PicoRobotics::motorOff");
+    Serial.print(", motor: ");
+    Serial.println(motor);
   #endif
-
+  motorOn(motor, FORWARD, 0);
 }
