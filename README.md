@@ -1,5 +1,5 @@
 # Kitronik-Robotics-Board-Arduino
- use Kitronik Robotics Board for Pico with Arduino env.
+Arduino library for the Kitronik Robotics Board for Pico
 
 based on Kitronik Robotics Board Pico library in MicroPython language here:
 https://github.com/KitronikLtd/Kitronik-Pico-Robotics-Board-MicroPython
@@ -9,7 +9,7 @@ https://github.com/NachtRaveVL/PCA9685-Arduino
 
 Names of functions, constants are mostly those of Kitronik-Pico-Robotics-Board-MicroPython
 
-Restrictions: only motors will be controlled in this first version
+Restrictions: only the four motors will be controlled in this first version, no stepper motors or servos
 
 Kitronik Robotics board is designed to use a Raspberry Pi Pico module, but any microcontroller module 
 with an I2C interface can be used (test done on Arduino Nano 33 BLE).

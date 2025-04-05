@@ -48,6 +48,8 @@ class PicoRobotics
     */
     PicoRobotics(byte I2CAddress = CHIP_ADDRESS, TwoWire& i2cWire = Wire, uint32_t i2cSpeed = 100000);  
 
+    void i2cWire_begin();
+    
     void initPCA();
 
     // Resets modules. called in initPCA(), before any init()'s, but public, can be called anytime 

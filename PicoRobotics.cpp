@@ -22,12 +22,14 @@ PicoRobotics::PicoRobotics(byte I2CAddress, TwoWire& i2cWire, uint32_t i2cSpeed)
     : _i2cAddress(I2CAddress),
       _i2cWire(&i2cWire),
       _i2cSpeed(i2cSpeed),
-      _lastI2CError(0)
-      
+      _lastI2CError(0) 
 {
-  _i2cWire->setClock(_i2cSpeed);
+}
 
-  initPCA();
+void PicoRobotics::i2cWire_begin(){
+  _lastI2CError = 0;
+
+  _i2cWire->setClock(_i2cSpeed);
 }
 
 // setup the PCA chip for 50Hz and zero out registers.
@@ -155,8 +157,8 @@ void PicoRobotics::motorOn(byte motor, byte direction, byte speed){
     Serial.println(speed);
   #endif
 
-  assert(speed < 100);
-  assert(!((motor < 1) || (motor > 4)));
+  //assert(speed < 100);
+  //assert(!((motor < 1) || (motor > 4)));
 
   byte motorReg = MOT_REG_BASE + ((motor - 1) * (REG_OFFSET << 1));
 
@@ -188,7 +190,7 @@ void PicoRobotics::motorOn(byte motor, byte direction, byte speed){
     writeRegister(motorReg+1, 0);
     writeRegister(motorReg+4, 0);
     writeRegister(motorReg+5, 0);
-    assert("INVALID DIRECTION");
+    //assert("INVALID DIRECTION");
   }
 }
 
