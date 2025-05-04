@@ -1,6 +1,6 @@
 // see README.md
 
-#include "PicoRobotics.h"
+#include "src/PicoRobotics.h"
 
 #define DEBUGSERIAL   // debug information sent on serial Monitor
 
