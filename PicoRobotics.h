@@ -1,11 +1,11 @@
-/*  */
+/* see README */
 
 #ifndef PicoRobotics_H
 #define PicoRobotics_H
 
-// assuming sofware i2c protocol is not used
+// assuming -sofware- i2c protocol is not used
 
-// Uncomment or -D this define to enable debug output.
+// Uncomment or -D this define to enable debug output
 //#define PCA9685_ENABLE_DEBUG_OUTPUT
 
 #include <Arduino.h>
@@ -48,8 +48,10 @@ class PicoRobotics
     */
     PicoRobotics(byte I2CAddress = CHIP_ADDRESS, TwoWire& i2cWire = Wire, uint32_t i2cSpeed = 100000);  
 
-    void i2cWire_begin();
+    // begin init of board by setting clock of i2c 
+    void begin();
     
+    // setup the PCA chip for 50Hz and zero out registers
     void initPCA();
 
     // Resets modules. called in initPCA(), before any init()'s, but public, can be called anytime 
@@ -68,18 +70,17 @@ class PicoRobotics
 
     void motorOff(byte motor);
 
-    #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+    #ifdef DEBUGSERIAL
       void checkForErrors();
     #endif
 
   protected:
     byte _i2cAddress;                                       // Module's i2c address (default: B000000)
-    #ifndef PCA9685_USE_SOFTWARE_I2C
-      TwoWire* _i2cWire;                                      // Wire class instance (unowned) (default: Wire)
-      uint32_t _i2cSpeed;                                     // Module's i2c clock speed (default: 400000)
-    #endif
+    
+    TwoWire* _i2cWire;                                      // Wire class instance (unowned) (default: Wire)
+    uint32_t _i2cSpeed;                                     // Module's i2c clock speed (default: 400000)
     
     byte _lastI2CError;                                     // Last module i2c error
-
 };
+
 #endif  // ifndef PicoRobotics_H

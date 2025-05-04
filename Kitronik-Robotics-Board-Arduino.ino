@@ -2,44 +2,63 @@
 
 #include "PicoRobotics.h"
 
-#define PCA9685_ENABLE_DEBUG_OUTPUT 1
+#define DEBUGSERIAL   // debug information sent on serial Monitor
 
 PicoRobotics board;
 
-byte loopNb = 0;
-
 void setup() {
   Serial.begin(115200);               // Begin Serial and Wire interfaces
+  while (!Serial);
+
   pinMode(LED_BUILTIN, OUTPUT);       // initialize digital pin LED_BUILTIN as an output.
     
   Wire.begin();                       // Use I2C interface as a controller device
   
-  board.i2cWire_begin();              // set clock frequency for I2C communication 
+  board.begin();                      // set clock frequency for I2C communication 
   
   board.initPCA();                    // initialize PCA9685 chip
   
-  //Serial.println(board.getChannelPWM(0)); // Should output 2048, which is 128 << 4
+  #ifdef DEBUGSERIAL
+    //Serial.println(board.getChannelPWM(0)); // Should output 2048, which is 128 << 4
+  #endif
 }
 
+/* just an exemple here, to check if the motors have the intended forward movement
+   move 1 second forward, then 1 second backward
+*/
 void loop() {
   board.motorOn(leftMotor, FORWARD, 20);
   board.motorOn(rightMotor, FORWARD, 20);
-  digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
-  Serial.println("motor On Forward");
+  digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on
+  #ifdef DEBUGSERIAL
+    Serial.println("motor On Forward");
+  #endif
+
   delay(1000);    // 1 second
+
   board.motorOff(leftMotor);
   board.motorOff(rightMotor);
   digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
-  Serial.println("motor Off");
-  delay(1000);
+  #ifdef DEBUGSERIAL
+    Serial.println("motor Off");
+  #endif
+
+  delay(1000);    // 1 second
+
   board.motorOn(leftMotor, REVERSE, 20);
   board.motorOn(rightMotor, REVERSE, 20);
   digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
-  Serial.println("motor On Reverse");
+  #ifdef DEBUGSERIAL
+    Serial.println("motor On Reverse");
+  #endif
+
   delay(1000);    // 1 second
+
   board.motorOff(leftMotor);
   board.motorOff(rightMotor);
   digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
-  Serial.println("motor Off");
+  #ifdef DEBUGSERIAL
+    Serial.println("motor Off");
+  #endif
   delay(1000);
 }

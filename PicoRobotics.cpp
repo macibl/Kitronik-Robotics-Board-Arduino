@@ -1,16 +1,17 @@
 /*  Arduino Library for the Kitronik Pico Robotics board
-
+    see README
 */
 
+#include "Arduino.h"
 #include "PicoRobotics.h"
 
 // Register addresses from data sheet
-#define PCA9685_MODE1_REG               (byte)0x00
-#define PCA9685_PRESCALE_REG            (byte)0xFE
-#define PCA9685_ALLLEDONL_REG           (byte)0xFA
-#define PCA9685_ALLLEDONH_REG           (byte)0xFB
-#define PCA9685_ALLLEDOFFL_REG           (byte)0xFC
-#define PCA9685_ALLLEDOFFH_REG           (byte)0xFD
+#define PCA9685_MODE1_REG           (byte)0x00
+#define PCA9685_PRESCALE_REG        (byte)0xFE
+#define PCA9685_ALLLEDONL_REG       (byte)0xFA
+#define PCA9685_ALLLEDONH_REG       (byte)0xFB
+#define PCA9685_ALLLEDOFFL_REG      (byte)0xFC
+#define PCA9685_ALLLEDOFFH_REG      (byte)0xFD
 
 #define MOT_REG_BASE    (byte)0x28 // Address of first register used to control motors : LED8_OFF_L register 
 #define REG_OFFSET      (byte)0x04      // register offset for same type of register
@@ -26,7 +27,7 @@ PicoRobotics::PicoRobotics(byte I2CAddress, TwoWire& i2cWire, uint32_t i2cSpeed)
 {
 }
 
-void PicoRobotics::i2cWire_begin(){
+void PicoRobotics::begin(){
   _lastI2CError = 0;
 
   _i2cWire->setClock(_i2cSpeed);
@@ -35,7 +36,7 @@ void PicoRobotics::i2cWire_begin(){
 // setup the PCA chip for 50Hz and zero out registers.
 void PicoRobotics::initPCA(){
 
-  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+  #ifdef DEBUGSERIAL
     Serial.println("PicoRobotics::initPCA");
   #endif 
   
@@ -73,7 +74,7 @@ void PicoRobotics::initPCA(){
      accessed within the 500uS window */
   delayMicroseconds(500);
 
-  /* Mode 2 register does not need an init, default value is enough
+  /* Mode 2 register does not need any init, default value is enough
      INVRT = 0, OUTDRV = 1 (needed for external N-type driver connecting output of PCA9685 to DRV8833 H-Bridges)
      OCH = 0, OUTNE = 0 (unused, OE* pin = 0)
   */
@@ -81,7 +82,7 @@ void PicoRobotics::initPCA(){
 
 void PicoRobotics::resetDevices() {
   // see §7.6 of PCA9685 datasheet
-  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+  #ifdef DEBUGSERIAL
       Serial.println("PicoRobotics::resetDevices");
   #endif
   _i2cWire->beginTransmission(0);
@@ -90,13 +91,13 @@ void PicoRobotics::resetDevices() {
 
   delayMicroseconds(10);
 
-  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+  #ifdef DEBUGSERIAL
     checkForErrors();
   #endif
 }
 
 void PicoRobotics::writeRegister(byte regAddress, byte value) {
-#ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+#ifdef DEBUGSERIAL
   Serial.print("  PicoRobotics::writeRegister regAddress: 0x");
   Serial.print(regAddress, HEX);
   Serial.print(", value: 0x");
@@ -109,12 +110,12 @@ _i2cWire->write(regAddress);
 _i2cWire->write(value);
 _lastI2CError = _i2cWire->endTransmission();
 
-#ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+#ifdef DEBUGSERIAL
     checkForErrors();
 #endif
 }
 
-#ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+#ifdef DEBUGSERIAL
 #if 0
 // Compilation error: invalid conversion from 'const char*' to 'byte {aka unsigned char}' [-fpermissive]
 static const char *textForI2CError(byte errorCode) {
@@ -131,7 +132,7 @@ static const char *textForI2CError(byte errorCode) {
         return "Other error";
     }
 }
-#endif
+#endif  // #if 0
 
 void PicoRobotics::checkForErrors() {
   if (_lastI2CError) {
@@ -142,12 +143,12 @@ void PicoRobotics::checkForErrors() {
     }
 }
 
-#endif // /ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+#endif  // #ifdef DEBUGSERIAL
 
 /* Driving the motor is simpler than the servo - just convert 0-100% to 0-4095 and push it to the correct registers.
    each motor has 4 writes - low and high bytes for a pair of registers */
 void PicoRobotics::motorOn(byte motor, byte direction, byte speed){
-  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+  #ifdef DEBUGSERIAL
     Serial.print("PicoRobotics::motorOn");
     Serial.print(", motor: ");
     Serial.print(motor);
@@ -166,7 +167,7 @@ void PicoRobotics::motorOn(byte motor, byte direction, byte speed){
   byte lowByte = PWMVal & 0xFF;
   byte highByte = (PWMVal>>8) & 0xFF;
   
-  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+  #ifdef DEBUGSERIAL
     Serial.print(", motorReg: 0x");
     Serial.print(motorReg, HEX);
     Serial.print(", lowByte: 0x");
@@ -195,7 +196,7 @@ void PicoRobotics::motorOn(byte motor, byte direction, byte speed){
 }
 
 void PicoRobotics::motorOff(byte motor){
-  #ifdef PCA9685_ENABLE_DEBUG_OUTPUT
+  #ifdef DEBUGSERIAL
     Serial.println("PicoRobotics::motorOff");
     Serial.print(", motor: ");
     Serial.println(motor);
